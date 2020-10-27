@@ -8,6 +8,31 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include TouchGFX/target/generated/subdir.mk
+-include TouchGFX/target/subdir.mk
+-include TouchGFX/gui/src/screen_screen/subdir.mk
+-include TouchGFX/gui/src/model/subdir.mk
+-include TouchGFX/gui/src/common/subdir.mk
+-include TouchGFX/generated/texts/src/subdir.mk
+-include TouchGFX/generated/images/src/__designer/subdir.mk
+-include TouchGFX/generated/images/src/subdir.mk
+-include TouchGFX/generated/gui_generated/src/screen_screen/subdir.mk
+-include TouchGFX/generated/gui_generated/src/common/subdir.mk
+-include TouchGFX/generated/fonts/src/subdir.mk
+-include TouchGFX/build/MINGW32_NT-6.2/touchgfx/framework/source/platform/hal/simulator/sdl2/subdir.mk
+-include TouchGFX/build/MINGW32_NT-6.2/touchgfx/framework/source/platform/driver/touch/subdir.mk
+-include TouchGFX/build/MINGW32_NT-6.2/simulator/subdir.mk
+-include TouchGFX/build/MINGW32_NT-6.2/gui/src/screen_screen/subdir.mk
+-include TouchGFX/build/MINGW32_NT-6.2/gui/src/model/subdir.mk
+-include TouchGFX/build/MINGW32_NT-6.2/gui/src/common/subdir.mk
+-include TouchGFX/build/MINGW32_NT-6.2/generated/texts/src/subdir.mk
+-include TouchGFX/build/MINGW32_NT-6.2/generated/simulator/src/subdir.mk
+-include TouchGFX/build/MINGW32_NT-6.2/generated/images/src/__designer/subdir.mk
+-include TouchGFX/build/MINGW32_NT-6.2/generated/images/src/subdir.mk
+-include TouchGFX/build/MINGW32_NT-6.2/generated/gui_generated/src/screen_screen/subdir.mk
+-include TouchGFX/build/MINGW32_NT-6.2/generated/gui_generated/src/common/subdir.mk
+-include TouchGFX/build/MINGW32_NT-6.2/generated/fonts/src/subdir.mk
+-include TouchGFX/App/subdir.mk
 -include Drivers/STM32F4xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
@@ -62,7 +87,7 @@ all: TestSDRAM.elf secondary-outputs
 
 # Tool invocations
 TestSDRAM.elf: $(OBJS) $(USER_OBJS) C:\Users\laoxi\STM32CubeIDE\workspace\TestSDRAM\STM32F429IGTX_FLASH.ld
-	arm-none-eabi-g++ -o "TestSDRAM.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\laoxi\STM32CubeIDE\workspace\TestSDRAM\STM32F429IGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="TestSDRAM.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+	arm-none-eabi-g++ -o "TestSDRAM.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\laoxi\STM32CubeIDE\workspace\TestSDRAM\STM32F429IGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="TestSDRAM.map" -Wl,--gc-sections -static -L"C:\Users\laoxi\STM32CubeIDE\workspace\TestSDRAM\Middlewares\ST\touchgfx\lib\core\cortex_m4f\gcc" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
