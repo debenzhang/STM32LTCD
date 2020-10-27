@@ -1,0 +1,2 @@
+sdram_fmc_drv.c:10:12:SDRAM_SendCommand	48	static
+sdram_fmc_drv.c:33:6:SDRAM_Init	16	static
