@@ -11,7 +11,7 @@ screenViewBase::screenViewBase()
     __background.setPosition(0, 0, 800, 480);
     __background.setColor(touchgfx::Color::getColorFrom24BitRGB(0, 0, 0));
 
-    toggleButton1.setXY(336, 221);
+    toggleButton1.setXY(481, 415);
     toggleButton1.setBitmaps(touchgfx::Bitmap(BITMAP_BLUE_TOGGLEBARS_TOGGLE_ROUND_LARGE_BUTTON_OFF_ID), touchgfx::Bitmap(BITMAP_BLUE_TOGGLEBARS_TOGGLE_ROUND_LARGE_BUTTON_ON_ID));
 
     add(__background);

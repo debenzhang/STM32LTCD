@@ -23,6 +23,7 @@
 #include "dma2d.h"
 #include "ltdc.h"
 #include "tim.h"
+#include "usart.h"
 #include "gpio.h"
 #include "fmc.h"
 #include "app_touchgfx.h"
@@ -31,15 +32,29 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include "sdram_fmc_drv.h"
+//#include "gt911.h"
+#include "touch_800x480.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+#ifdef __GNUC__
+#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+#else
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#endif
 
+PUTCHAR_PROTOTYPE {
+    while ((USART1->SR & 0X40) == 0);
+    USART1->DR = (uint8_t) ch;
+    return ch;
+}
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -66,6 +81,20 @@ void SystemClock_Config(void);
 #define EXT_SDRAM_SIZE        (32 * 1024 * 1024)
 
 uint32_t bsp_TestExtSDRAM(void);
+
+uint8_t timer_irq = 0;
+uint8_t touch_cnt = 0;
+
+void timer_loop(void) {
+	if(timer_irq == 0) return;
+	timer_irq = 0;
+
+	touch_cnt++;
+	if(touch_cnt > 20) {
+		touch_cnt = 0;
+		Touch_Scan();
+	}
+}
 
 /* USER CODE END 0 */
 
@@ -102,6 +131,7 @@ int main(void)
   MX_LTDC_Init();
   MX_DMA2D_Init();
   MX_CRC_Init();
+  MX_USART1_UART_Init();
   MX_TouchGFX_Init();
   /* USER CODE BEGIN 2 */
 
@@ -112,10 +142,16 @@ int main(void)
 
   SDRAM_Init();
 
-  HAL_Delay(1000);
+  HAL_Delay(100);
 
   // 点亮 LCD
   HAL_GPIO_WritePin(LED_BL_GPIO_Port, LED_BL_Pin, GPIO_PIN_SET);
+
+  printf("System running... \r\n");
+
+  Touch_Init();				// 触摸屏初始化
+
+//  Touch_Init();
 
 //  uint32_t i;
 //  uint32_t *pSRAM;
@@ -141,8 +177,8 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
-  MX_TouchGFX_Process();
+	  timer_loop();
+	  MX_TouchGFX_Process();
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -207,6 +243,19 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+
+  if(GPIO_Pin == TOUCH_INT_Pin)
+  {
+    // HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+    // 清除标志
+    __HAL_GPIO_EXTI_CLEAR_IT(GPIO_Pin);
+  }
+}
+
+
 uint32_t bsp_TestExtSDRAM(void)
 {
     uint32_t i;
@@ -246,7 +295,7 @@ uint32_t bsp_TestExtSDRAM(void)
         pSRAM++;
     }
 
-    /* 再次比较SDRAM的数�???? */
+    /* 再次比较SDRAM的数�??????????? */
     err = 0;
     pSRAM = (uint32_t *)EXT_SDRAM_ADDR;
     for (i = 0; i < EXT_SDRAM_SIZE / 4; i++)
@@ -262,14 +311,14 @@ uint32_t bsp_TestExtSDRAM(void)
         return (4 * err);
     }
 
-    /* 测试按字节方式访�????, 目的是验�???? FSMC_NBL0 �???? FSMC_NBL1 口线 */
+    /* 测试按字节方式访�???????????, 目的是验�??????????? FSMC_NBL0 �??????????? FSMC_NBL1 口线 */
     pBytes = (uint8_t *)EXT_SDRAM_ADDR;
     for (i = 0; i < sizeof(ByteBuf); i++)
     {
         *pBytes++ = ByteBuf[i];
     }
 
-    /* 比较SDRAM的数�???? */
+    /* 比较SDRAM的数�??????????? */
     err = 0;
     pBytes = (uint8_t *)EXT_SDRAM_ADDR;
     for (i = 0; i < sizeof(ByteBuf); i++)

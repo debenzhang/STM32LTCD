@@ -59,11 +59,17 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define TOUCH_RST_Pin GPIO_PIN_13
+#define TOUCH_RST_GPIO_Port GPIOC
+#define TOUCH_INT_Pin GPIO_PIN_11
+#define TOUCH_INT_GPIO_Port GPIOI
 #define LED_BL_Pin GPIO_PIN_13
 #define LED_BL_GPIO_Port GPIOD
 #define LED_Pin GPIO_PIN_4
 #define LED_GPIO_Port GPIOD
 /* USER CODE BEGIN Private defines */
+
+extern uint8_t timer_irq;
 
 /* USER CODE END Private defines */
 
