@@ -91,9 +91,7 @@ uint32_t bsp_TestExtSDRAM(void);
 uint8_t timer_irq = 0;
 uint8_t touch_cnt = 0;
 
-uint8_t rUSB = 0;
 uint8_t pre_state;
-uint16_t usbCounter = 0;
 
 void timer_loop(void) {
 	if(timer_irq == 0) return;
@@ -103,16 +101,6 @@ void timer_loop(void) {
 	if(touch_cnt > 20) {
 		touch_cnt = 0;
 		Touch_Scan();
-	}
-
-	usbCounter++;
-	if(usbCounter > 3000) {
-		usbCounter = 0;
-		printf("usbCounter. \r\n");
-		if(rUSB == 1) {
-			printf("Explore_Disk. \r\n");
-			Explore_Disk(USBHPath, 1);
-		}
 	}
 
 	MX_USB_HOST_Process();
@@ -134,17 +122,9 @@ void timer_loop(void) {
 					break;
 				} else {
 					printf("f_mount success. \r\n");
-					rUSB = 1;
+					Explore_Disk(USBHPath, 1);
 				}
-//				if(f_mount(&USBDISKFatFs, (TCHAR const*)USBHPath, 0) != FR_OK) {
-//					printf("f_mount fails. \r\n");
-//					break;
-//				} else {
-//					if(USBH_MSC_IsReady(&USBDISKFatFs))
-////					printf("Explore_Disk. \r\n");
-////					Explore_Disk("0:/", 1);
-////					Explore_Disk(USBHPath, 1);
-//				}
+
 				break;
 			default:
 				break;

@@ -60,59 +60,6 @@ FRESULT Explore_Disk(char *path, uint8_t recu_level) {
 	  printf("%s/%s\n", path, fno.fname);
   }
   f_closedir(&dir);
-
-//  if(res == FR_OK) {
-////    while(USBH_MSC_IsReady(&hUsbHostFS)) {
-//    while(1) {
-//      res = f_readdir(&dir, &fno);
-//      printf("res2: %d \r\n", res);
-//      if(res != FR_OK || fno.fname[0] == 0) {
-//        break;
-//      }
-//      if(fno.fname[0] == '.') {
-//        continue;
-//      }
-//
-//      fn = fno.fname;
-//      strcpy(tmp, fn);
-//	  strcat(tmp, "\n");
-//	  printf(tmp);
-//
-//	if((fno.fattrib & 0x3F) == AM_DIR) {
-//	  strcat(tmp, "\n");
-//	  printf(tmp);
-//	  Explore_Disk(fn, 2);
-//	} else {
-//	  strcat(tmp, "\n");
-//	  printf(tmp);
-//	}
-//
-////      line_idx++;
-////      if(line_idx > 9) {
-////        line_idx = 0;
-////      }
-////
-////      if(recu_level == 1) {
-////        USBH_UsrLog("   |__");
-////      }
-////      else if(recu_level == 2) {
-////        USBH_UsrLog("   |   |__");
-////      }
-////      if((fno.fattrib & AM_MASK) == AM_DIR) {
-////        strcat(tmp, "\n");
-////        USBH_UsrLog((void *)tmp);
-////        Explore_Disk(fn, 2);
-////      } else {
-////        strcat(tmp, "\n");
-////        USBH_UsrLog((void *)tmp);
-////      }
-////
-////      if(((fno.fattrib & AM_MASK) == AM_DIR)&&(recu_level == 2)) {
-////        Explore_Disk(fn, 2);
-////      }
-//    }
-//    f_closedir(&dir);
-//  }
   return res;
 }
 
