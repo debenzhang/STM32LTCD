@@ -9,6 +9,8 @@
 #include <gui/screen_screen/screenPresenter.hpp>
 #include <touchgfx/widgets/Box.hpp>
 #include <touchgfx/widgets/ToggleButton.hpp>
+#include <touchgfx/widgets/ButtonWithLabel.hpp>
+#include <touchgfx/widgets/TextArea.hpp>
 
 class screenViewBase : public touchgfx::View<screenPresenter>
 {
@@ -16,6 +18,14 @@ public:
     screenViewBase();
     virtual ~screenViewBase() {}
     virtual void setupScreen();
+
+    /*
+     * Virtual Action Handlers
+     */
+    virtual void clickBtnTog()
+    {
+        // Override and implement this function in screen
+    }
 
 protected:
     FrontendApplication& application() {
@@ -26,9 +36,21 @@ protected:
      * Member Declarations
      */
     touchgfx::Box __background;
-    touchgfx::ToggleButton toggleButton1;
+    touchgfx::ToggleButton btnTog;
+    touchgfx::ButtonWithLabel btnPage2;
+    touchgfx::TextArea textArea1;
 
 private:
+
+    /*
+     * Callback Declarations
+     */
+    touchgfx::Callback<screenViewBase, const touchgfx::AbstractButton&> buttonCallback;
+
+    /*
+     * Callback Handler Declarations
+     */
+    void buttonCallbackHandler(const touchgfx::AbstractButton& src);
 
 };
 

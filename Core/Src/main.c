@@ -21,9 +21,11 @@
 #include "main.h"
 #include "crc.h"
 #include "dma2d.h"
+#include "fatfs.h"
 #include "ltdc.h"
 #include "tim.h"
 #include "usart.h"
+#include "usb_host.h"
 #include "gpio.h"
 #include "fmc.h"
 #include "app_touchgfx.h"
@@ -32,8 +34,10 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include "sdram_fmc_drv.h"
-//#include "gt911.h"
 #include "touch_800x480.h"
+#include "usbh_core.h"
+#include "USBDisk.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -70,6 +74,8 @@ PUTCHAR_PROTOTYPE {
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void MX_USB_HOST_Process(void);
+
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -77,13 +83,17 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-#define EXT_SDRAM_ADDR      ((uint32_t)0xD0000000)
-#define EXT_SDRAM_SIZE        (32 * 1024 * 1024)
+#define EXT_SDRAM_ADDR		((uint32_t)0xD0000000)
+#define EXT_SDRAM_SIZE		(32 * 1024 * 1024)
 
 uint32_t bsp_TestExtSDRAM(void);
 
 uint8_t timer_irq = 0;
 uint8_t touch_cnt = 0;
+
+uint8_t rUSB = 0;
+uint8_t pre_state;
+uint16_t usbCounter = 0;
 
 void timer_loop(void) {
 	if(timer_irq == 0) return;
@@ -94,6 +104,70 @@ void timer_loop(void) {
 		touch_cnt = 0;
 		Touch_Scan();
 	}
+
+	usbCounter++;
+	if(usbCounter > 3000) {
+		usbCounter = 0;
+		printf("usbCounter. \r\n");
+		if(rUSB == 1) {
+			printf("Explore_Disk. \r\n");
+			Explore_Disk(USBHPath, 1);
+		}
+	}
+
+	MX_USB_HOST_Process();
+
+	if (pre_state != Appli_state) {
+		switch(Appli_state) {
+			case APPLICATION_DISCONNECT: //USB flash disk remove
+				/* Register the file system object to the FatFs module */
+				printf("APPLICATION_DISCONNECT. \r\n");
+				if(f_mount(NULL, "", 0) != FR_OK) {
+					USBH_UsrLog("ERROR : Cannot exit FatFs! \n");
+				}
+				break;
+			case APPLICATION_READY:   //USB flash disk plugin
+				/* Open or create a log file and ready to append */
+				printf("APPLICATION_READY. \r\n");
+				if(f_mount(&USBDISKFatFs, (TCHAR const*)USBHPath, 0) != FR_OK) {
+					printf("f_mount fails. \r\n");
+					break;
+				} else {
+					printf("f_mount success. \r\n");
+					rUSB = 1;
+				}
+//				if(f_mount(&USBDISKFatFs, (TCHAR const*)USBHPath, 0) != FR_OK) {
+//					printf("f_mount fails. \r\n");
+//					break;
+//				} else {
+//					if(USBH_MSC_IsReady(&USBDISKFatFs))
+////					printf("Explore_Disk. \r\n");
+////					Explore_Disk("0:/", 1);
+////					Explore_Disk(USBHPath, 1);
+//				}
+				break;
+			default:
+				break;
+		}
+	}
+	pre_state = Appli_state;
+
+//	switch(Appli_state) {
+//		case APPLICATION_READY:
+////			if(rUSB == 0) {
+////	            printf("APPLICATION_READY.\r\n");
+//				// MSC_Application();
+//				Explore_Disk("0:/", 1);
+////			}
+//			// Appli_state = APPLICATION_DISCONNECT;
+//			rUSB = 1;
+//			break;
+//		case APPLICATION_DISCONNECT:
+//			f_mount(NULL, "", 0);
+//			break;
+//		default:
+//			break;
+//	}
 }
 
 /* USER CODE END 0 */
@@ -105,7 +179,8 @@ void timer_loop(void) {
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  Appli_state = APPLICATION_IDLE;
+  pre_state = Appli_state;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -132,6 +207,8 @@ int main(void)
   MX_DMA2D_Init();
   MX_CRC_Init();
   MX_USART1_UART_Init();
+  MX_USB_HOST_Init();
+  MX_FATFS_Init();
   MX_TouchGFX_Init();
   /* USER CODE BEGIN 2 */
 
@@ -150,8 +227,6 @@ int main(void)
   printf("System running... \r\n");
 
   Touch_Init();				// 触摸屏初始化
-
-//  Touch_Init();
 
 //  uint32_t i;
 //  uint32_t *pSRAM;
@@ -177,8 +252,9 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  timer_loop();
-	  MX_TouchGFX_Process();
+    // MX_USB_HOST_Process();
+	timer_loop();
+    MX_TouchGFX_Process();
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -197,7 +273,7 @@ void SystemClock_Config(void)
   /** Configure the main internal regulator output voltage
   */
   __HAL_RCC_PWR_CLK_ENABLE();
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
@@ -206,16 +282,10 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 15;
-  RCC_OscInitStruct.PLL.PLLN = 216;
+  RCC_OscInitStruct.PLL.PLLN = 144;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 4;
+  RCC_OscInitStruct.PLL.PLLQ = 5;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Activate the Over-Drive mode
-  */
-  if (HAL_PWREx_EnableOverDrive() != HAL_OK)
   {
     Error_Handler();
   }
@@ -228,7 +298,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
   {
     Error_Handler();
   }
@@ -295,7 +365,7 @@ uint32_t bsp_TestExtSDRAM(void)
         pSRAM++;
     }
 
-    /* 再次比较SDRAM的数�??????????? */
+    /* 再次比较SDRAM的数�????????????? */
     err = 0;
     pSRAM = (uint32_t *)EXT_SDRAM_ADDR;
     for (i = 0; i < EXT_SDRAM_SIZE / 4; i++)
@@ -311,14 +381,14 @@ uint32_t bsp_TestExtSDRAM(void)
         return (4 * err);
     }
 
-    /* 测试按字节方式访�???????????, 目的是验�??????????? FSMC_NBL0 �??????????? FSMC_NBL1 口线 */
+    /* 测试按字节方式访�?????????????, 目的是验�????????????? FSMC_NBL0 �????????????? FSMC_NBL1 口线 */
     pBytes = (uint8_t *)EXT_SDRAM_ADDR;
     for (i = 0; i < sizeof(ByteBuf); i++)
     {
         *pBytes++ = ByteBuf[i];
     }
 
-    /* 比较SDRAM的数�??????????? */
+    /* 比较SDRAM的数�????????????? */
     err = 0;
     pBytes = (uint8_t *)EXT_SDRAM_ADDR;
     for (i = 0; i < sizeof(ByteBuf); i++)
@@ -334,6 +404,7 @@ uint32_t bsp_TestExtSDRAM(void)
     }
     return 0;
 }
+
 /* USER CODE END 4 */
 
 /**

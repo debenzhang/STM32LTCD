@@ -4,21 +4,56 @@
 #include <gui_generated/screen_screen/screenViewBase.hpp>
 #include <touchgfx/Color.hpp>
 #include "BitmapDatabase.hpp"
+#include <texts/TextKeysAndLanguages.hpp>
 
-screenViewBase::screenViewBase()
+screenViewBase::screenViewBase() :
+    buttonCallback(this, &screenViewBase::buttonCallbackHandler)
 {
 
     __background.setPosition(0, 0, 800, 480);
     __background.setColor(touchgfx::Color::getColorFrom24BitRGB(0, 0, 0));
 
-    toggleButton1.setXY(481, 415);
-    toggleButton1.setBitmaps(touchgfx::Bitmap(BITMAP_BLUE_TOGGLEBARS_TOGGLE_ROUND_LARGE_BUTTON_OFF_ID), touchgfx::Bitmap(BITMAP_BLUE_TOGGLEBARS_TOGGLE_ROUND_LARGE_BUTTON_ON_ID));
+    btnTog.setXY(580, 118);
+    btnTog.setBitmaps(touchgfx::Bitmap(BITMAP_BLUE_TOGGLEBARS_TOGGLE_RE_LARGE_BUTTON_OFF_ID), touchgfx::Bitmap(BITMAP_BLUE_TOGGLEBARS_TOGGLE_RE_LARGE_BUTTON_ON_ID));
+    btnTog.setAction(buttonCallback);
+
+    btnPage2.setXY(630, 420);
+    btnPage2.setBitmaps(touchgfx::Bitmap(BITMAP_BLUE_BUTTONS_ROUND_EDGE_SMALL_ID), touchgfx::Bitmap(BITMAP_BLUE_BUTTONS_ROUND_EDGE_SMALL_PRESSED_ID));
+    btnPage2.setLabelText(touchgfx::TypedText(T_SINGLEUSEID3));
+    btnPage2.setLabelColor(touchgfx::Color::getColorFrom24BitRGB(219, 219, 219));
+    btnPage2.setLabelColorPressed(touchgfx::Color::getColorFrom24BitRGB(255, 255, 255));
+    btnPage2.setAction(buttonCallback);
+
+    textArea1.setXY(229, 26);
+    textArea1.setColor(touchgfx::Color::getColorFrom24BitRGB(245, 245, 245));
+    textArea1.setLinespacing(0);
+    textArea1.setTypedText(touchgfx::TypedText(T_SINGLEUSEID4));
 
     add(__background);
-    add(toggleButton1);
+    add(btnTog);
+    add(btnPage2);
+    add(textArea1);
 }
 
 void screenViewBase::setupScreen()
 {
 
+}
+
+void screenViewBase::buttonCallbackHandler(const touchgfx::AbstractButton& src)
+{
+    if (&src == &btnTog)
+    {
+        //Interaction2
+        //When btnTog clicked call virtual function
+        //Call clickBtnTog
+        clickBtnTog();
+    }
+    else if (&src == &btnPage2)
+    {
+        //Interaction1
+        //When btnPage2 clicked change screen to Screen1
+        //Go to Screen1 with screen transition towards West
+        application().gotoScreen1ScreenWipeTransitionWest();
+    }
 }
